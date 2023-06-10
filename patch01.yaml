@@ -1,0 +1,23 @@
+---
+- name: Patch Ubuntu, Lubuntu, and Fedora
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update and upgrade packages
+      package:
+        name: '*'
+        state: latest
+        update_cache: yes
+      register: package_update
+      failed_when: "'Reboot is required' in package_update.msg"
+
+    - name: Print package update message
+      debug:
+        msg: |
+          {% if "'Reboot is required' in package_update.msg" %}
+            Server {{ inventory_hostname }} needs to be rebooted
+          {% else %}
+            Server {{ inventory_hostname }} is up-to-date and doesn't need to be rebooted
+          {% endif %}
+      when: package_update.changed
